@@ -1,6 +1,5 @@
 package main
 
-//consider: https://gobyexample.com/signals
 
 import (
 	"fmt"
@@ -20,7 +19,11 @@ import (
 	"github.com/tehsmeely/discreteDistribution"
 )
 
-var OpsLog *log.Logger
+var (
+	OpsLog *log.Logger
+	RunLog *log.Logger
+)
+
 // PARTICLE
 type Particle struct {
 	X int
@@ -257,6 +260,12 @@ func customDLA(c *cli.Context) error {
 	}
 	OpsLog=log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile)
 	OpsLog.Println("Starting")
+	logFile2, err := os.OpenFile("DLArun.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("Failed to open log file 'DLArun.log' :", err)
+		return err
+	}
+	RunLog=log.New(logFile2, "", 0)
 
 	ALPHABET := [26]string{"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"}
 	var dc DiffuseConfig 
@@ -287,6 +296,7 @@ func customDLA(c *cli.Context) error {
 	elapsed := time.Since(start)
 	if success {
 		OpsLog.Printf("Complete. Took %v minutes. Exported result with s%v and m%v to %v\n", elapsed.Minutes(), c.String("start"), c.String("move"), c.String("output"))
+		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
 	} else {
 		OpsLog.Printf("Exporting file to %v failed. Done (took %v minutes)\n", c.String("output"), elapsed.Minutes())
 	}
@@ -316,8 +326,6 @@ func diffuse(grid *Grid, wg *sync.WaitGroup, dc *DiffuseConfig, name string, v b
 
 func export(grid *Grid, output string) bool {
 	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{grid.sizeX, grid.sizeY}})
-
-	// This loop just fills the image with random data
 	var c color.RGBA
 	for x := 0; x < grid.sizeX; x++ {
 		for y := 0; y < grid.sizeY; y++ {
