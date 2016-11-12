@@ -161,7 +161,7 @@ func (grid *Grid) Place(p *Particle) {
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "0.0.1"
+	app.Version = "0.0.3"
 	app.Name = "DLA"
 	app.Usage = "Diffusion Limited Aggregation"
 	app.Flags = []cli.Flag {
@@ -305,7 +305,7 @@ func customDLA(c *cli.Context) error {
 		fmt.Println("Done, exported to", c.String("output"))
 		OpsLog.Printf("Complete. Took %v minutes. Exported result with s%v and m%v to %v\n", elapsed.Minutes(), c.String("start"), c.String("move"), c.String("output"))
 		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
-	} else if !c.Bool("nooutput") {
+	} else if c.Bool("nooutput") {
 		fmt.Println("Done, not exported")
 		OpsLog.Printf("Complete. Took %v minutes. Result with s%v and m%v was not exported\n", elapsed.Minutes(), c.String("start"), c.String("move"))
 		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
