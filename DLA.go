@@ -297,19 +297,20 @@ func customDLA(c *cli.Context) error {
 	wg.Wait()
 	fmt.Println()
 	var success bool
-	if c.Bool("nooutput") {
+	elapsed := time.Since(start) // Before export so it doesnt factor in that time
+	if !c.Bool("nooutput") {
 		success = export(&grid, c.String("output"))
-	} else {
-		success = false
-	}
-	elapsed := time.Since(start)
+	}	
 	if success {
+		fmt.Println("Done, exported to", c.String("output"))
 		OpsLog.Printf("Complete. Took %v minutes. Exported result with s%v and m%v to %v\n", elapsed.Minutes(), c.String("start"), c.String("move"), c.String("output"))
 		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
-	} else if c.Bool("nooutput") {
+	} else if !c.Bool("nooutput") {
+		fmt.Println("Done, not exported")
 		OpsLog.Printf("Complete. Took %v minutes. Result with s%v and m%v was not exported\n", elapsed.Minutes(), c.String("start"), c.String("move"))
 		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
 	} else {
+		fmt.Println("Done. Failed to export to image file", c.String("output"))
 		OpsLog.Printf("Exporting file to %v failed. Done (took %v minutes)\n", c.String("output"), elapsed.Minutes())
 	}
 	return nil
@@ -353,10 +354,8 @@ func export(grid *Grid, output string) bool {
 	myfile, err := os.Create(output)
 	if err == nil {
 		png.Encode(myfile, myimage)
-		fmt.Println("Done, exported to", output)
 		return true
 	} else {
-		fmt.Println("Failed to create output image file", output)
 		return false
 	}
 }
