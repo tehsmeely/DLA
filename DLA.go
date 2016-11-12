@@ -184,6 +184,10 @@ func main() {
 			Name:        "verbose, report, r",
 			Usage:       "Enable verbose routine reporting",
 		},
+		cli.BoolFlag{
+			Name:        "nooutput, n",
+			Usage:       "Do not output resulting image",
+		},
 	}
 	app.Action = customDLA
 	app.Run(os.Args) 
@@ -244,7 +248,7 @@ func validateArgs(c *cli.Context) (bool, string) {
 		return false, fmt.Sprintf("'start' list doest not add up to 100: (Adds up to %v)", sum)
 	}
 	//verbose - unneccessary
-
+	//nooutput - unneccessary
 
 	return true, ""
 }
@@ -292,11 +296,19 @@ func customDLA(c *cli.Context) error {
 	}
 	wg.Wait()
 	fmt.Println()
-	success := export(&grid, c.String("output"))
+	var success bool
+	if c.Bool("nooutput") {
+		success = export(&grid, c.String("output"))
+	} else {
+		success = false
+	}
 	elapsed := time.Since(start)
 	if success {
 		OpsLog.Printf("Complete. Took %v minutes. Exported result with s%v and m%v to %v\n", elapsed.Minutes(), c.String("start"), c.String("move"), c.String("output"))
-		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
+		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
+	} else if c.Bool("nooutput") {
+		OpsLog.Printf("Complete. Took %v minutes. Result with s%v and m%v was not exported\n", elapsed.Minutes(), c.String("start"), c.String("move"))
+		RunLog.Printf("{\"SIZE\":[%v,%v],\"MOVE\":\"%v\",\"START\":\"%v\",\"TIME\":{\"SECONDS\":\"%v\", \"MINUTES\":\"%v\"}}\n", XSize, YSize, c.String("start"), c.String("move"), elapsed.Seconds(), elapsed.Minutes())
 	} else {
 		OpsLog.Printf("Exporting file to %v failed. Done (took %v minutes)\n", c.String("output"), elapsed.Minutes())
 	}
